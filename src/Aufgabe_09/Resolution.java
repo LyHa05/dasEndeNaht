@@ -6,12 +6,13 @@ import java.util.Iterator;
 public class Resolution {
 
 	public static HashSet<Klausel> knf;
-	public static boolean resolviert = true;
+	public static boolean resolviert = false;
 	
 	public static HashSet<Klausel> pResolvieren(HashSet<Klausel> uebergebenerKNF) {
 				
 		HashSet<Klausel> verfuegbareKlauseln = new HashSet<Klausel>(tiefeKopieErstellen(uebergebenerKNF));
 		HashSet<Klausel> zuResolvierendeKlauseln = new HashSet<Klausel>(tiefeKopieErstellen(uebergebenerKNF));
+		
 		
 		/** angepasster Algorithmus für P-Resolution*/
 		
@@ -82,71 +83,49 @@ public class Resolution {
 
 		HashSet<Klausel> verfuegbareKlauseln = new HashSet<Klausel>(tiefeKopieErstellen(uebergebenerKNF));
 		HashSet<Klausel> zuResolvierendeKlauseln = new HashSet<Klausel>(tiefeKopieErstellen(uebergebenerKNF));
-		System.out.println("zuResolvierendeKlauseln " + zuResolvierendeKlauseln);
-		System.out.println("verfuegbareKlauseln " + verfuegbareKlauseln);
-
-		while (resolviert == true && !(zuResolvierendeKlauseln.isEmpty())) {
-
+		
+		do {
+			
 			resolviert = false;
-
-			/**
-			 * Kopie des HashSet erstellen, um ConcurrentModificationException
-			 * zu umgehen
-			 */
-			HashSet<Klausel> kopieVerfuegbareKlauseln = (HashSet<Klausel>) verfuegbareKlauseln.clone();
-			HashSet<Klausel> kopieZuResolvierendeKlauseln = (HashSet<Klausel>) zuResolvierendeKlauseln.clone();
-
-			System.out.println("neue for-Kaskade");
-						
+								
 			/** Suchen von komplementaeren Klauseln */
 			
-			for (Klausel k1 : kopieVerfuegbareKlauseln) {
-				System.out.println("k1: " + k1);
-				for (Klausel k2 : kopieZuResolvierendeKlauseln) {
-					System.out.println("k2: " + k2);
+			Iterator<Klausel> verfuegIter = verfuegbareKlauseln.iterator();
+			while (verfuegIter.hasNext() && (resolviert == false)) {
+				Klausel k1 = verfuegIter.next(); 	    
+				
+				Iterator<Klausel> zuResIter = zuResolvierendeKlauseln.iterator();
+				while (zuResIter.hasNext() && (resolviert == false)) {
+					Klausel k2 = zuResIter.next();
+					
 					for (Literal l1 : k1.getLiterale()) {
-						System.out.println("l1: " + l1);
 						for (Literal l2 : k2.getLiterale()) {
-							System.out.println("l2: " + l2);
 
 							if (istResolvierbar(k1, k2, l1, l2)) {
 
 								resolviert = true;
 
-								System.out.println("vor Resolvierung");
-								System.out.println("zuResolvierendeKlauseln " + zuResolvierendeKlauseln);
-								System.out.println("verfuegbareKlauseln " + verfuegbareKlauseln);
-
-								Klausel neueKlausel = new Klausel(
-										resolvierteLiteraleZusammen(zuResolvierendeKlauseln, k1, k2, l1, l2));
-
-								verfuegbareKlauseln.add(neueKlausel);
-								System.out.println("verfuegbareKlauseln: " + verfuegbareKlauseln);
-								zuResolvierendeKlauseln.add(neueKlausel);
-								System.out.println(
-										"zuResolvierendeKlauseln mit neuer Klausel: " + zuResolvierendeKlauseln);
-								zuResolvierendeKlauseln.remove(k1);
-								System.out.println("zuResolvierendeKlauseln ohne k1: " + zuResolvierendeKlauseln);
-								zuResolvierendeKlauseln.remove(k2);
-								System.out.println("zuResolvierendeKlauseln ohne k2: " + zuResolvierendeKlauseln);
-								System.out.println("---Abschluss erste Runde---");
-								System.out.println("zuResolvierendeKlauseln " + zuResolvierendeKlauseln);
-								System.out.println("verfuegbareKlauseln " + verfuegbareKlauseln);
+								Klausel neueKlausel = new Klausel(resolvierteLiteraleZusammen(zuResolvierendeKlauseln, k1, k2, l1, l2));
 								
+								if (!neueKlausel.getLiterale().isEmpty()) {verfuegbareKlauseln.add(neueKlausel);};
+								
+								if (!neueKlausel.getLiterale().isEmpty()) {zuResolvierendeKlauseln.add(neueKlausel);};
+								
+								zuResolvierendeKlauseln.remove(k1);
+								zuResolvierendeKlauseln.remove(k2);
 							}
 						}
-
 					}
 				}
 
 			}
-		}
+		} while (resolviert == true && !(zuResolvierendeKlauseln.isEmpty()) );
+
 		return zuResolvierendeKlauseln;
 
 	}
 
-	private static Klausel resolvierteLiteraleZusammen(HashSet<Klausel> nochZuResolvieren, Klausel k1, Klausel k2,
-			Literal l1, Literal l2) {
+	private static Klausel resolvierteLiteraleZusammen(HashSet<Klausel> nochZuResolvieren, Klausel k1, Klausel k2, Literal l1, Literal l2) {
 
 		Klausel neuK = new Klausel();
 
@@ -163,8 +142,6 @@ public class Resolution {
 			}
 		}		
 		
-		System.out.println("resolvierte Klausel " + neuK);
-
 		return neuK;
 	}
 
@@ -226,7 +203,7 @@ public class Resolution {
 	public static void main(String[] args) {
 
 		HashSet<Literal> litset1 = new HashSet<Literal>();
-		Literal l1 = new Literal('A', false);
+		Literal l1 = new Literal('A', true);
 		Literal l2 = new Literal('B', true);
 //		Literal l3 = new Literal('B', false);
 		litset1.add(l1);
@@ -234,29 +211,40 @@ public class Resolution {
 //		litset1.add(l3);
 
 		HashSet<Literal> litset2 = new HashSet<Literal>();
-		Literal l4 = new Literal('A', true);
-		Literal l5 = new Literal('C', false);
+		Literal l4 = new Literal('A', false);
+		Literal l5 = new Literal('B', true);
+		
 		litset2.add(l4);
 		litset2.add(l5);
-//
-//		HashSet<Literal> litset3 = new HashSet<Literal>();
-//		Literal l6 = new Literal('D', true);
-//		Literal l7 = new Literal('D', false);
+
+		HashSet<Literal> litset3 = new HashSet<Literal>();
+		Literal l6 = new Literal('A', true);
+		Literal l7 = new Literal('B', false);
 //		Literal l8 = new Literal('C', true);
-//		litset3.add(l6);
-//		litset3.add(l7);
+		litset3.add(l6);
+		litset3.add(l7);
+//		litset3.add(l8);
+		
+		HashSet<Literal> litset4 = new HashSet<Literal>();
+		Literal l9 = new Literal('A', false);
+		Literal l10 = new Literal('B', false);
+//		Literal l8 = new Literal('C', true);
+		litset4.add(l9);
+		litset4.add(l10);
 //		litset3.add(l8);
 
 		Klausel klausel1 = new Klausel(litset1);
 		Klausel klausel2 = new Klausel(litset2);
-//		Klausel klausel3 = new Klausel(litset3);
+		Klausel klausel3 = new Klausel(litset3);
+		Klausel klausel4 = new Klausel(litset4);
 
 		knf = new HashSet<Klausel>();
 
 		knf.add(klausel1);
 		knf.add(klausel2);
-//		knf.add(klausel3);
-
+		knf.add(klausel3);
+		knf.add(klausel4);
+		
 		System.out.println(knf);
 
 		System.out.println("Das Ende: " + resolvierenPrimitiv(knf));
