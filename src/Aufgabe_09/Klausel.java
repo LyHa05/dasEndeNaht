@@ -2,7 +2,7 @@ package Aufgabe_09;
 
 import java.util.HashSet;
 
-public class Klausel {
+public class Klausel implements Comparable<Klausel> {
 	private HashSet<Literal> literale;
 
 	public Klausel(HashSet<Literal> literale) {
@@ -71,12 +71,20 @@ public class Klausel {
 		for (int i = 0; i < lit.length-1; i++) {
 			builder.append(lit[i].toString()).append(", ");
 		}
-		builder.append(lit[lit.length-1]);
+			builder.append(lit[lit.length-1]);
 		} else {
 			builder.append(' ');
 		}
 		builder.append('}');
 		return builder.toString();
+	}
+
+	@Override
+	public int compareTo(Klausel k) {
+		if (this.equals(k)) return 0;
+		if (this.getLiterale().size() == k.getLiterale().size()) return -1;
+		if (!this.equals(k)) return (this.getLiterale().size() - k.getLiterale().size());
+		return 0; 
 	}
 	
 	
